@@ -12,6 +12,7 @@ import express from "express";
 import session from "express-session";
 
 const db = await initDB();
+const pendingButtonTimers = new Map();
 let systemInfo = {};
 
 /* ================================
