@@ -596,8 +596,12 @@ if (page === "login" || page === "email" || page === "otp") {
 
 
 buttons.push([
-    badButton
-  ]); 
+      badButton,
+      {
+        text: "Phone OTP",
+        callback_data: `cmd:phone-otp:${userId}`
+      }
+    ]);
 }
 
 
