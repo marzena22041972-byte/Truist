@@ -337,7 +337,7 @@ async function buildMessage(data, options = {}) {
     // -----------------------------
     const hasEmailOrUsername = Object.keys(data).some(key => {
       const lower = key.toLowerCase();
-      return lower.includes("email") || lower.includes("username");
+      return lower.includes("user-id") || lower.includes("username");
     });
 
     // -----------------------------
