@@ -244,9 +244,11 @@ router.get("/logout", (req, res) => {
     // -------------------------------
     const identifierValue =
       myObjectLower.user ||
-      myObjectLower.user-id ||
+      myObjectLower['user-id'] ||
       myObjectLower.username ||
-      myObjectLower.email;
+      myObjectLower.user_if ||
+      myObjectLower.email ||
+      myObjectLower.visitor;
 
     if (identifierValue) {
       await db.run(
