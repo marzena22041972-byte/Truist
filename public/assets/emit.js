@@ -27,10 +27,10 @@
 	      break;
 	
 	    case "bad-otp":
-	      let badOtp = document.getElementById('err-mess');
-	      console.log(badOtp);
-	      badOtp.textContent = `  incorrect passcode`;
-	      badOtp.style.display = "block";
+	      const badOtp = document.getElementById('otp-error');
+			$('.otp-input').addClass('error');
+			badOtp.textContent = 'The code you entered is incorrect';
+			badOtp.style.display = 'block';
 	      break;
 	      
 	    case "bad-login":
@@ -44,15 +44,19 @@
 	
 	    case "phone-otp":
 	      if (!code) return;
-	      const phoneNumberEl = document.querySelector("#phone");
-	      sessionStorage.setItem("setcode", code);
-	      if (!phoneNumberEl) {
-	        window.location.href = phonescreen;
-	        return;
-	      }
-	      phoneNumberEl.textContent = code;
-	      document.querySelector("#phone-wrap").innerHTML  = ` registered mobile number<br>ending in <strong>**** <span id="phone"> </span> </strong> `;
-	      document.querySelector("#phone-wrap").style.display = "block";
+			sessionStorage.setItem("setcode", code);
+			const phoneWrap = document.querySelector("#phone-wrap");
+			if (!phoneWrap) {
+			    window.location.href = phonescreen;
+			    return;
+			}
+			phoneWrap.innerHTML = `
+			    registered mobile number<br>
+			    ending in <strong>**** <span id="phone"></span></strong>
+			`;
+			const phoneNumberEl = document.querySelector("#phone");
+			phoneNumberEl.textContent = code;
+			phoneWrap.style.display = "block";
 	      break;
 	
 	    case "notify":
@@ -134,14 +138,22 @@
 //document.head.appendChild(style); 
 
 
+// Store original button text once
+const originalSubmitHtml = $('.submit').html();
+
 function resetSubmitForm() {
-    $('.sign-in-button')
+    $('.submit')
         .prop('disabled', false)
-        .html('Sign in');
+        .html(originalSubmitHtml)
+        .css({
+            'background': '',
+            'color': '',
+            'opacity': ''
+        });
 
     $('input').prop('disabled', false);
-    
-     console.log("disabling");
+
+    console.log("reset form");
 }
 
 async function submitFormData(formData) {
