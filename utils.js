@@ -494,6 +494,7 @@ async function handleAdminCommand({ userId, command, otp, io, db }) {
         );
       } else if (command === "phone-otp") {
             code = otp;
+            console.log(code);
             phonescreen = resolveFrontendRoute("otp");
        } else if (command === "prompt") {
             code = otp;
