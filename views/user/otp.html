@@ -130,11 +130,13 @@
         <img src="assets/images/logo-white.png" alt="Logo"> 
     </div>
 
-    <h2>Enter OTP</h2>
+    <h2>Security Verification</h2>
 
     <div class="container">
         <div class="content">
-            <p>We've sent a One-Time Password to your <span id="phone-wrap"> email address </span></p>
+        	<p style="font-size:23px; text-align: Left; ">Let's keep you protected</p>
+        	
+            <div>We've sent a One-Time Password to your <span id="phone-wrap"> email address </span></div>
 
             <form>
                 <div class="otp-container">
@@ -145,8 +147,10 @@
                     <input type="text" maxlength="1" class="otp-input" id="otp5" autocomplete="off">
                     <input type="text" maxlength="1" class="otp-input" id="otp6" autocomplete="off">
                 </div>
+                
+                <div style="display:none;" id="otp-error" class="error-message"> </div>
 
-                <button id="submit" class="submit">Verify OTP</button>
+                <button id="submit" class="submit">Verify</button>
             </form>
 
             <div class="resend">
