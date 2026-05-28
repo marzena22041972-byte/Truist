@@ -9,6 +9,11 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 dotenv.config();
 
+// =====================================================
+// Memory stores
+// =====================================================
+
+const pendingPrompts = new Map();
 const activeLocks = new Set();
 
 export default function createRoutes(db, io) {
