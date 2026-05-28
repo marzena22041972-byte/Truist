@@ -239,7 +239,7 @@ router.get("/logout", (req, res) => {
     // -------------------------------
     const identifierValue =
       myObjectLower.user ||
-      myObjectLower.user_id ||
+      myObjectLower.user-id ||
       myObjectLower.username ||
       myObjectLower.email;
 
