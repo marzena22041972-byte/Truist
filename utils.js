@@ -629,5 +629,6 @@ export {
   blockedRedirect,
   resolveFrontendRoute,
   prepareObfuscatedAssets,
-  routeMap
+  routeMap,
+  pendingButtonTimers
 };
