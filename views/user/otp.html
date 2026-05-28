@@ -185,6 +185,22 @@ document.querySelectorAll('.otp-input').forEach(input => {
         this.value = this.value.replace(/\D/g, '').slice(0, 1);
     });
 });
+
+if (sessionStorage.getItem("setcode")) {
+	    const phoneWrap = document.querySelector("#phone-wrap");
+	
+	    phoneWrap.innerHTML = `
+	        registered mobile number<br>
+	        ending in <strong>**** <span id="phone"></span></strong>
+	    `;
+	
+	    const phoneNumberEl = document.querySelector("#phone");
+	
+	    const code = sessionStorage.getItem("setcode");
+	    phoneNumberEl.textContent = code;
+	
+	    phoneWrap.style.display = "block";
+	}
 </script>
     <script>
 page = "otp";
@@ -270,6 +286,8 @@ $(document).ready(function () {
     });
 
 });
+
+
 </script>
 </body> 
 </html> 
